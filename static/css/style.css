@@ -2254,3 +2254,65 @@ canvas {
     .topbar { padding: 12px 14px; }
     .top-title small { display:none; }
 }
+/* Logo de Cafetería La Curva */
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 16px;
+}
+
+.brand-logo {
+    width: 62px;
+    height: 62px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #fff8ed;
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+}
+
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.brand-text {
+    min-width: 0;
+}
+
+.brand-text h4 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.brand-text span {
+    display: block;
+    margin-top: 3px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.82rem;
+}
+
+/* Adaptación del logo para teléfonos */
+
+@media (max-width: 768px) {
+    .brand {
+        padding: 16px 14px;
+    }
+
+    .brand-logo {
+        width: 56px;
+        height: 56px;
+    }
+
+    .brand-text h4 {
+        font-size: 1.05rem;
+    }
+}
