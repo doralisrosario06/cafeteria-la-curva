@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Ganancias | Cafetería La Curva{% endblock %}
+{% block page_title %}Ganancias{% endblock %}
+
+{% block content %}
+
+<div class="card-box mb-4">
+
+    <div class="section-header">
+
+        <div>
+            <h4>Resumen de ganancias</h4>
+
+            <p>
+                Consulta los ingresos, costos y resultados económicos
+                registrados en el sistema.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="stat-card">
+
+            <span>Ingresos registrados</span>
+
+            <h3>
+                RD$
+                {{ "%.2f"|format(ingresos|default(0, true)) }}
+            </h3>
+
+            <small>Ventas realizadas</small>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="stat-card">
+
+            <span>Costos</span>
+
+            <h3>
+                RD$
+                {{ "%.2f"|format(costos|default(0, true)) }}
+            </h3>
+
+            <small>Costos de los productos vendidos</small>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="stat-card">
+
+            <span>Ganancia neta</span>
+
+            <h3>
+                RD$
+                {{ "%.2f"|format(ganancia_neta|default(0, true)) }}
+            </h3>
+
+            <small>Ingresos menos costos</small>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-6 col-xl-3">
+
+        <div class="stat-card">
+
+            <span>Fiados pendientes</span>
+
+            <h3>
+                RD$
+                {{ "%.2f"|format(fiados_pendientes|default(0, true)) }}
+            </h3>
+
+            <small>Dinero pendiente por cobrar</small>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row g-4 mb-4">
+
+    <div class="col-lg-8">
+
+        <div class="card-box h-100">
+
+            <div class="section-header mb-3">
+
+                <div>
+                    <h4>Distribución de la ganancia</h4>
+
+                    <p>
+                        División sugerida de la ganancia neta.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="chart-container">
+
+                <canvas
+                    id="graficaDistribucion"
+                    data-disponible="{{ disponible|default(0, true) }}"
+                    data-reserva="{{ reserva|default(0, true) }}"
+                    data-reinversion="{{ reinversion|default(0, true) }}">
+                </canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-lg-4">
+
+        <div class="card-box h-100">
+
+            <h4>Resultado</h4>
+
+            <p class="text-muted">
+                Distribución calculada según los registros actuales.
+            </p>
+
+            <div class="profit-box">
+
+                <span>Disponible</span>
+
+                <h2>
+                    RD$
+                    {{ "%.2f"|format(disponible|default(0, true)) }}
+                </h2>
+
+            </div>
+
+            <div class="total-row">
+
+                <span>Reserva 20%</span>
+
+                <strong>
+                    RD$
+                    {{ "%.2f"|format(reserva|default(0, true)) }}
+                </strong>
+
+            </div>
+
+            <div class="total-row">
+
+                <span>Reinversión 30%</span>
+
+                <strong>
+                    RD$
+                    {{ "%.2f"|format(reinversion|default(0, true)) }}
+                </strong>
+
+            </div>
+
+            <div class="total-row">
+
+                <span>Fiados pagados</span>
+
+                <strong>
+                    RD$
+                    {{ "%.2f"|format(fiados_pagados|default(0, true)) }}
+                </strong>
+
+            </div>
+
+            <div class="total-row final">
+
+                <span>Ganancia neta</span>
+
+                <strong>
+                    RD$
+                    {{ "%.2f"|format(ganancia_neta|default(0, true)) }}
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card-box">
+
+    <div class="section-header mb-4">
+
+        <div>
+            <h4>Historial de ingresos</h4>
+
+            <p>
+                Ventas agrupadas por fecha.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+
+                <tr>
+                    <th>Fecha</th>
+                    <th>Ingresos</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for item in historial %}
+
+                    <tr>
+
+                        <td>
+                            {{ item.fecha }}
+                        </td>
+
+                        <td>
+
+                            <strong>
+                                RD$
+                                {{ "%.2f"|format(item.ingresos|default(0, true)) }}
+                            </strong>
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="2"
+                            class="text-center text-muted">
+
+                            Todavía no hay ventas registradas.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const grafica = document.getElementById(
+        "graficaDistribucion"
+    );
+
+    if (!grafica) {
+        return;
+    }
+
+    const disponible = Number(
+        grafica.dataset.disponible || 0
+    );
+
+    const reserva = Number(
+        grafica.dataset.reserva || 0
+    );
+
+    const reinversion = Number(
+        grafica.dataset.reinversion || 0
+    );
+
+    const totalDistribucion =
+        disponible + reserva + reinversion;
+
+    let datosGrafica;
+
+    if (totalDistribucion > 0) {
+        datosGrafica = [
+            disponible,
+            reserva,
+            reinversion
+        ];
+    } else {
+        datosGrafica = [1, 0, 0];
+    }
+
+    new Chart(grafica, {
+        type: "doughnut",
+
+        data: {
+            labels: [
+                "Disponible",
+                "Reserva 20%",
+                "Reinversión 30%"
+            ],
+
+            datasets: [
+                {
+                    data: datosGrafica,
+
+                    backgroundColor: [
+                        "#1f8a59",
+                        "#6f4e37",
+                        "#d5a344"
+                    ],
+
+                    borderColor: [
+                        "#ffffff",
+                        "#ffffff",
+                        "#ffffff"
+                    ],
+
+                    borderWidth: 3,
+
+                    hoverOffset: 8
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "65%",
+
+            plugins: {
+                legend: {
+                    position: "bottom",
+
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        color: "#2f2924"
+                    }
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            if (totalDistribucion <= 0) {
+                                return "Sin datos registrados";
+                            }
+
+                            const valor = Number(
+                                context.raw || 0
+                            );
+
+                            return (
+                                context.label +
+                                ": RD$ " +
+                                valor.toFixed(2)
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

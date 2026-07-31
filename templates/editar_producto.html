@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Editar producto | Cafetería La Curva{% endblock %}
+{% block page_title %}Editar producto{% endblock %}
+
+{% block content %}
+
+<div class="card-box mb-4">
+    <div class="section-header">
+        <div>
+            <h4>Editar producto</h4>
+            <p>Modifica los datos del producto seleccionado.</p>
+        </div>
+
+        <a href="{{ url_for('inventario') }}" class="btn-cafe">
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="card-box">
+
+    <form method="POST" class="form-grid">
+
+        <div>
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre" value="{{ producto.nombre }}" required>
+        </div>
+
+        <div>
+            <label for="categoria_id">Categoría</label>
+            <select id="categoria_id" name="categoria_id" required>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}" {% if producto.categoria_id == categoria.id %}selected{% endif %}>
+                        {{ categoria.nombre }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="precio_compra">Precio compra</label>
+            <input type="number" id="precio_compra" name="precio_compra" step="0.01" value="{{ producto.precio_compra }}" required>
+        </div>
+
+        <div>
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" name="stock" value="{{ producto.stock }}" required>
+        </div>
+
+        <div>
+            <label for="stock_minimo">Stock mínimo</label>
+            <input type="number" id="stock_minimo" name="stock_minimo" value="{{ producto.stock_minimo }}" required>
+        </div>
+
+        <div>
+            <label for="tipo_precio">Tipo de precio</label>
+            <select id="tipo_precio" name="tipo_precio">
+                <option>Precio único</option>
+                <option>Pequeño y grande</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="precio_unico">Precio único</label>
+            <input type="number" id="precio_unico" name="precio_unico" step="0.01" placeholder="0.00">
+        </div>
+
+        <div>
+            <label for="precio_pequeno">Precio pequeño</label>
+            <input type="number" id="precio_pequeno" name="precio_pequeno" step="0.01" placeholder="0.00">
+        </div>
+
+        <div>
+            <label for="precio_grande">Precio grande</label>
+            <input type="number" id="precio_grande" name="precio_grande" step="0.01" placeholder="0.00">
+        </div>
+
+        <button type="submit" class="btn-cafe form-button">
+            Guardar cambios
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card-box mt-4">
+    <h5>Precios actuales</h5>
+
+    {% for presentacion in producto.presentaciones %}
+        <p>
+            <strong>{{ presentacion.nombre }}:</strong>
+            RD$ {{ presentacion.precio }}
+        </p>
+    {% endfor %}
+</div>
+
+{% endblock %}

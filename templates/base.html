@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}
+            Cafetería La Curva
+        {% endblock %}
+    </title>
+
+    <!-- Bootstrap para la estructura y diseño adaptable -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <!-- Bootstrap Icons para mostrar los iconos del sistema -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+        rel="stylesheet">
+
+    <!-- Hoja de estilos principal del sistema -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reponsive.css') }}">
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <meta name="theme-color" content="#6f4e37">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}">
+
+    <!-- Aquí puedo agregar CSS específico desde otras páginas -->
+    {% block css %}{% endblock %}
+
+    <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+</head>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+
+<div class="layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <!-- Menú lateral principal -->
+    <aside
+        class="sidebar"
+        id="sidebar"
+        aria-label="Menú principal">
+
+        <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Cerrar menú">
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
+
+        <!-- Nombre y logo del negocio -->
+        <div class="brand">
+
+            <div
+                class="brand-icon"
+                aria-hidden="true">
+                LC
+            </div>
+
+            <div>
+                <h4>La Curva</h4>
+                <span>Cafetería</span>
+            </div>
+
+        </div>
+
+        <!-- Enlaces disponibles según los permisos del usuario -->
+        {% set es_admin = current_user.rol == "Administrador" %}
+        {% set endpoint = request.endpoint or "" %}
+        <nav class="menu" aria-label="Navegación del sistema">
+            {% if es_admin or current_user.puede_dashboard %}
+            <a class="{{ 'active' if endpoint == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}"><i class="bi bi-house-door"></i><span>Inicio</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_ventas %}
+            <a class="{{ 'active' if endpoint in ['ventas','finalizar_venta'] else '' }}" href="{{ url_for('ventas') }}"><i class="bi bi-cart-check"></i><span>Punto de venta</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_inventario %}
+            <a class="{{ 'active' if endpoint in ['inventario','editar_producto'] else '' }}" href="{{ url_for('inventario') }}"><i class="bi bi-box-seam"></i><span>Inventario</span></a>
+            <a class="{{ 'active' if endpoint == 'proveedores' else '' }}" href="{{ url_for('proveedores') }}"><i class="bi bi-truck"></i><span>Proveedores</span></a>
+            <a class="{{ 'active' if endpoint == 'compras' else '' }}" href="{{ url_for('compras') }}"><i class="bi bi-bag-plus"></i><span>Compras</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_caja %}
+            <a class="{{ 'active' if endpoint in ['caja','reporte_caja'] else '' }}" href="{{ url_for('caja') }}"><i class="bi bi-cash-stack"></i><span>Caja</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_fiados %}
+            <a class="{{ 'active' if endpoint in ['fiados','pagar_fiado'] else '' }}" href="{{ url_for('fiados') }}"><i class="bi bi-journal-text"></i><span>Fiados</span></a>
+            <a class="{{ 'active' if endpoint == 'clientes' else '' }}" href="{{ url_for('clientes') }}"><i class="bi bi-people"></i><span>Clientes</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_ganancias %}
+            <a class="{{ 'active' if endpoint == 'gastos' else '' }}" href="{{ url_for('gastos') }}"><i class="bi bi-receipt"></i><span>Gastos</span></a>
+            <a class="{{ 'active' if endpoint == 'ganancias' else '' }}" href="{{ url_for('ganancias') }}"><i class="bi bi-graph-up-arrow"></i><span>Ganancias</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_reportes %}
+            <a class="{{ 'active' if endpoint == 'reportes' else '' }}" href="{{ url_for('reportes') }}"><i class="bi bi-file-earmark-text"></i><span>Reportes</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_papelera %}
+            <a class="{{ 'active' if endpoint == 'papelera' else '' }}" href="{{ url_for('papelera') }}"><i class="bi bi-trash"></i><span>Papelera</span></a>
+            {% endif %}
+            {% if es_admin or current_user.puede_configuracion %}
+            <div class="menu-divider"><span>Administración</span></div>
+            <a class="{{ 'active' if endpoint == 'configuracion' else '' }}" href="{{ url_for('configuracion') }}"><i class="bi bi-gear"></i><span>Configuración</span></a>
+            <a class="{{ 'active' if endpoint == 'auditoria' else '' }}" href="{{ url_for('auditoria') }}"><i class="bi bi-clock-history"></i><span>Auditoría</span></a>
+            <a href="{{ url_for('respaldo') }}"><i class="bi bi-cloud-arrow-down"></i><span>Descargar respaldo</span></a>
+            {% endif %}
+        </nav>
+
+        <!-- Botón para cerrar la sesión -->
+        <a
+            class="logout"
+            href="{{ url_for('salir') }}">
+
+            <i
+                class="bi bi-box-arrow-right"
+                aria-hidden="true">
+            </i>
+
+            <span>Cerrar sesión</span>
+        </a>
+
+    </aside>
+
+    <!-- Contenido principal del sistema -->
+    <main class="main">
+
+        <!-- Barra superior -->
+        <header class="topbar">
+
+            <!-- Botón para abrir o cerrar el menú lateral -->
+            <button
+                type="button"
+                class="menu-btn"
+                id="menuBtn"
+                aria-label="Abrir o cerrar el menú lateral"
+                aria-controls="sidebar"
+                aria-expanded="false"
+                title="Abrir o cerrar menú">
+
+                <i
+                    class="bi bi-list"
+                    aria-hidden="true">
+                </i>
+
+                <span class="visually-hidden">
+                    Abrir o cerrar menú
+                </span>
+
+            </button>
+
+            <!-- Título de la página actual -->
+            <div class="top-title">
+
+                <h5>
+                    {% block page_title %}
+                        Inicio
+                    {% endblock %}
+                </h5>
+
+                <small>
+                    Sistema interno de gestión
+                </small>
+
+            </div>
+
+            <!-- Usuario que inició sesión -->
+            <div class="user-box">
+
+                <i
+                    class="bi bi-person-circle"
+                    aria-hidden="true">
+                </i>
+
+                <span>
+                    {{ current_user.nombre }}
+                </span>
+
+            </div>
+
+        </header>
+
+        <!-- Aquí se carga el contenido de cada módulo -->
+        <section class="content">
+            {% with mensajes = get_flashed_messages(with_categories=true) %}
+              {% for categoria, mensaje in mensajes %}
+                <div class="alert alert-{{ categoria if categoria in ['success','danger','warning','info'] else 'info' }} alert-dismissible fade show" role="alert">
+                  {{ mensaje }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+              {% endfor %}
+            {% endwith %}
+
+            {% block content %}
+            {% endblock %}
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- JavaScript general del sistema -->
+<script
+    src="{{ url_for('static', filename='js/app.js') }}">
+</script>
+
+<!-- Aquí puedo agregar JavaScript específico desde otras páginas -->
+{% block js %}{% endblock %}
+
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js')); }
+</script>
+</body>
+</html>

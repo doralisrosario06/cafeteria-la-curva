@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Papelera | Cafetería La Curva{% endblock %}
+{% block page_title %}Papelera{% endblock %}
+
+{% block content %}
+
+{% with mensajes = get_flashed_messages() %}
+    {% if mensajes %}
+        <div class="alert alert-success">
+            {{ mensajes[0] }}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="card-box mb-4">
+    <div class="section-header">
+        <div>
+            <h4>Productos eliminados</h4>
+            <p>Productos desactivados que pueden restaurarse.</p>
+        </div>
+    </div>
+</div>
+
+<div class="card-box">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for producto in productos_eliminados %}
+                    <tr>
+                        <td>#{{ producto.id }}</td>
+                        <td>{{ producto.nombre }}</td>
+                        <td>
+                            {% if producto.categoria %}
+                                {{ producto.categoria.nombre }}
+                            {% else %}
+                                Sin categoría
+                            {% endif %}
+                        </td>
+                        <td>{{ producto.stock }}</td>
+                        <td>
+                            <span class="badge-danger">Eliminado</span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('restaurar_producto', id=producto.id) }}">
+                                <button type="submit" class="btn-small">
+                                    Restaurar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            No hay productos eliminados.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

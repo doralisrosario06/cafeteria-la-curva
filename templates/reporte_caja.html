@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Reporte de Caja | Cafetería La Curva{% endblock %}
+{% block page_title %}Reporte de Caja{% endblock %}
+
+{% block content %}
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Monto inicial</span>
+            <h3>RD$ {{ "%.2f"|format(monto_inicial) }}</h3>
+            <small>Apertura de caja</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Ventas del día</span>
+            <h3>RD$ {{ "%.2f"|format(ventas_dia) }}</h3>
+            <small>Ventas registradas</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Salidas</span>
+            <h3>RD$ {{ "%.2f"|format(total_salidas) }}</h3>
+            <small>Gastos del día</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Total esperado</span>
+            <h3>RD$ {{ "%.2f"|format(total_esperado) }}</h3>
+            <small>Dinero que debe haber</small>
+        </div>
+    </div>
+
+</div>
+
+<div class="card-box mb-4">
+
+    <div class="section-header">
+        <div>
+            <h4>Buscar reporte de caja</h4>
+            <p>Consulta la caja por fecha.</p>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('reporte_caja') }}" class="form-grid">
+
+        <div>
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha" value="{{ fecha_busqueda }}">
+        </div>
+
+        <button type="submit" class="btn-cafe form-button">
+            Buscar
+        </button>
+
+        <button type="button" class="btn-small form-button" id="btnImprimirCaja">
+            Imprimir
+        </button>
+
+        <button type="button" class="btn-small form-button" id="btnExportarCaja">
+            Exportar Excel
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card-box mb-4">
+
+    <h4>Resumen del cierre</h4>
+
+    <div class="table-responsive">
+        <table class="table align-middle" id="tablaResumenCaja">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Monto inicial</th>
+                    <th>Ventas</th>
+                    <th>Entradas</th>
+                    <th>Salidas</th>
+                    <th>Total esperado</th>
+                    <th>Dinero contado</th>
+                    <th>Diferencia</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td>{{ fecha_busqueda }}</td>
+                    <td>RD$ {{ "%.2f"|format(monto_inicial) }}</td>
+                    <td>RD$ {{ "%.2f"|format(ventas_dia) }}</td>
+                    <td>RD$ {{ "%.2f"|format(total_entradas) }}</td>
+                    <td>RD$ {{ "%.2f"|format(total_salidas) }}</td>
+                    <td>RD$ {{ "%.2f"|format(total_esperado) }}</td>
+                    <td>RD$ {{ "%.2f"|format(monto_final) }}</td>
+                    <td>RD$ {{ "%.2f"|format(diferencia) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<div class="card-box">
+
+    <h4>Movimientos de caja</h4>
+    <p class="text-muted">Entradas y salidas registradas en la fecha seleccionada.</p>
+
+    <div class="table-responsive">
+        <table class="table align-middle" id="tablaMovimientosCaja">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Concepto</th>
+                    <th>Descripción</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for movimiento in movimientos %}
+                    <tr>
+                        <td>{{ movimiento.fecha.strftime("%I:%M %p") }}</td>
+                        <td>{{ movimiento.concepto }}</td>
+                        <td>{{ movimiento.descripcion }}</td>
+                        <td>
+                            {% if movimiento.tipo == "Entrada" %}
+                                <span class="badge-ok">Entrada</span>
+                            {% else %}
+                                <span class="badge-danger">Salida</span>
+                            {% endif %}
+                        </td>
+                        <td>RD$ {{ movimiento.monto }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            No hay movimientos registrados para esta fecha.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/reporte_caja.js') }}"></script>
+{% endblock %}

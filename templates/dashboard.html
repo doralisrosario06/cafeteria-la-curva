@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Cafetería La Curva{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-hero">
+
+    <div class="dashboard-hero-content">
+
+        <span class="dashboard-hero-badge">
+            <i class="bi bi-cup-hot"></i>
+            Sistema de gestión
+        </span>
+
+        <h1>Cafetería La Curva</h1>
+
+        <p>
+            Controla las ventas, el inventario, la caja y los reportes
+            desde un solo lugar.
+        </p>
+
+        <div class="dashboard-hero-actions">
+
+            <a href="{{ url_for('ventas') }}" class="btn-cafe">
+                Nueva venta
+            </a>
+
+            <a href="{{ url_for('inventario') }}"
+               class="dashboard-hero-secondary">
+                Ver inventario
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Ventas de hoy</span>
+            <h3>RD$ {{ "%.2f"|format(ventas_hoy) }}</h3>
+            <small>Ventas registradas</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Productos</span>
+            <h3>{{ total_productos }}</h3>
+            <small>Productos activos</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Fiados pendientes</span>
+            <h3>RD$ {{ "%.2f"|format(fiados_pendientes) }}</h3>
+            <small>Dinero por cobrar</small>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <span>Estado de caja</span>
+
+            {% if caja_abierta %}
+                <h3>Abierta</h3>
+                <small>Caja activa hoy</small>
+            {% else %}
+                <h3>Cerrada</h3>
+                <small>No hay caja abierta</small>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <div class="card-box">
+            <div class="section-header mb-3">
+                <div>
+                    <h4>Últimas ventas</h4>
+                    <p>Ventas más recientes registradas en el sistema.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for venta in ultimas_ventas %}
+                            <tr>
+                                <td>#{{ venta.id }}</td>
+                                <td>{{ venta.fecha.strftime("%d/%m/%Y %I:%M %p") }}</td>
+                                <td>RD$ {{ venta.total }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">
+                                    No hay ventas registradas.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

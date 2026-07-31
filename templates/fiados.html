@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Fiados | Cafetería La Curva{% endblock %}
+{% block page_title %}Fiados{% endblock %}
+
+{% block content %}
+
+<div class="card-box mb-4">
+
+    <div class="section-header">
+
+        <div>
+            <h4>Control de fiados</h4>
+
+            <p>
+                Consulta las ventas fiadas y registra
+                los abonos realizados por los clientes.
+            </p>
+        </div>
+
+        <a href="{{ url_for('ventas') }}" class="btn-cafe">
+
+            <i class="bi bi-cart-plus"></i>
+            Ir al Punto de Venta
+
+        </a>
+
+    </div>
+
+</div>
+
+{% with mensajes = get_flashed_messages() %}
+
+    {% if mensajes %}
+
+        <div class="alert alert-success">
+            {{ mensajes[0] }}
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-4">
+
+        <div class="stat-card">
+
+            <span>Cuentas pendientes</span>
+
+            <h3>{{ pendientes|length }}</h3>
+
+            <small>Clientes con balance pendiente</small>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="stat-card">
+
+            <span>Cuentas pagadas</span>
+
+            <h3>{{ pagados|length }}</h3>
+
+            <small>Fiados completados</small>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+        <div class="stat-card">
+
+            <span>Área de cobros</span>
+
+            <h3>
+                <i class="bi bi-cash-coin"></i>
+            </h3>
+
+            <small>Registra abonos de clientes</small>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="card-box mb-4">
+
+    <form
+        method="GET"
+        action="{{ url_for('fiados') }}"
+        class="form-grid">
+
+        <div>
+
+            <label for="buscar">
+                Buscar cliente
+            </label>
+
+            <input
+                type="text"
+                id="buscar"
+                name="buscar"
+                value="{{ buscar }}"
+                placeholder="Escribe el nombre del cliente">
+
+        </div>
+
+        <button
+            type="submit"
+            class="btn-cafe form-button">
+
+            <i class="bi bi-search"></i>
+            Buscar
+
+        </button>
+
+        <a
+            href="{{ url_for('fiados') }}"
+            class="btn-small form-button">
+
+            Ver todos
+
+        </a>
+
+    </form>
+
+</div>
+
+<div class="card-box mb-4">
+
+    <div class="section-header mb-4">
+
+        <div>
+            <h5>Fiados pendientes</h5>
+
+            <p>
+                Ventas que todavía tienen un balance por pagar.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>Descripción</th>
+                    <th>Total</th>
+                    <th>Pagado</th>
+                    <th>Pendiente</th>
+                    <th>Registrar abono</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for fiado in pendientes %}
+
+                    <tr>
+
+                        <td>#{{ fiado.id }}</td>
+
+                        <td>
+                            <strong>
+                                {{ fiado.nombre_cliente }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {% if fiado.telefono %}
+                                {{ fiado.telefono }}
+                            {% else %}
+                                Sin teléfono
+                            {% endif %}
+                        </td>
+
+                        <td>{{ fiado.descripcion }}</td>
+
+                        <td>
+                            RD$ {{ fiado.monto_total }}
+                        </td>
+
+                        <td>
+                            <span class="badge-ok">
+                                RD$ {{ fiado.abono }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="badge-danger">
+                                RD$ {{ fiado.pendiente }}
+                            </span>
+                        </td>
+
+                        <td>
+
+                            <form
+                                method="POST"
+                                action="{{ url_for('pagar_fiado', id=fiado.id) }}"
+                                class="fiado-payment-form">
+
+                                <input
+                                    type="number"
+                                    name="abono_extra"
+                                    step="0.01"
+                                    min="0.01"
+                                    max="{{ fiado.pendiente }}"
+                                    class="table-search"
+                                    placeholder="Monto"
+                                    required>
+
+                                <button
+                                    type="submit"
+                                    class="btn-small">
+
+                                    <i class="bi bi-cash"></i>
+                                    Abonar
+
+                                </button>
+
+                            </form>
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="8"
+                            class="text-center text-muted">
+
+                            No hay fiados pendientes.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<div class="card-box">
+
+    <div class="section-header mb-4">
+
+        <div>
+            <h5>Fiados pagados</h5>
+
+            <p>
+                Historial de cuentas completadas.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>Descripción</th>
+                    <th>Total</th>
+                    <th>Total pagado</th>
+                    <th>Estado</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for fiado in pagados %}
+
+                    <tr>
+
+                        <td>#{{ fiado.id }}</td>
+
+                        <td>
+                            <strong>
+                                {{ fiado.nombre_cliente }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {% if fiado.telefono %}
+                                {{ fiado.telefono }}
+                            {% else %}
+                                Sin teléfono
+                            {% endif %}
+                        </td>
+
+                        <td>{{ fiado.descripcion }}</td>
+
+                        <td>
+                            RD$ {{ fiado.monto_total }}
+                        </td>
+
+                        <td>
+                            RD$ {{ fiado.abono }}
+                        </td>
+
+                        <td>
+                            <span class="badge-ok">
+
+                                <i class="bi bi-check-circle"></i>
+                                Pagado
+
+                            </span>
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            class="text-center text-muted">
+
+                            No hay fiados pagados.
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

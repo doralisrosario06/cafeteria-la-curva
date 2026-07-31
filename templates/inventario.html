@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Inventario | Cafetería La Curva{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block content %}
+
+<div class="card-box mb-4">
+    <div class="section-header">
+        <div>
+            <h4>Gestión de inventario</h4>
+            <p>Crear, editar y eliminar productos internos.</p>
+        </div>
+    </div>
+</div>
+
+{% with mensajes = get_flashed_messages() %}
+    {% if mensajes %}
+        <div class="alert alert-success">
+            {{ mensajes[0] }}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<div class="card-box mb-4">
+
+    <h5>Nuevo producto</h5>
+
+    <form method="POST" action="{{ url_for('inventario') }}" class="form-grid">
+
+        <div>
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" name="nombre" placeholder="Ej: Café Americano" required>
+        </div>
+
+        <div>
+            <label for="categoria_id">Categoría</label>
+            <select id="categoria_id" name="categoria_id" required>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="precio_compra">Precio compra</label>
+            <input type="number" id="precio_compra" name="precio_compra" step="0.01" placeholder="0.00" required>
+        </div>
+
+        <div>
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" name="stock" placeholder="0" required>
+        </div>
+
+        <div>
+            <label for="stock_minimo">Stock mínimo</label>
+            <input type="number" id="stock_minimo" name="stock_minimo" value="5" required>
+        </div>
+
+        <div>
+            <label for="tipo_precio">Tipo de precio</label>
+            <select id="tipo_precio" name="tipo_precio">
+                <option>Precio único</option>
+                <option>Pequeño y grande</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="precio_unico">Precio único</label>
+            <input type="number" id="precio_unico" name="precio_unico" step="0.01" placeholder="0.00">
+        </div>
+
+        <div>
+            <label for="precio_pequeno">Precio pequeño</label>
+            <input type="number" id="precio_pequeno" name="precio_pequeno" step="0.01" placeholder="0.00">
+        </div>
+
+        <div>
+            <label for="precio_grande">Precio grande</label>
+            <input type="number" id="precio_grande" name="precio_grande" step="0.01" placeholder="0.00">
+        </div>
+
+        <button type="submit" class="btn-cafe form-button">
+            Guardar producto
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card-box">
+
+    <div class="section-header mb-3">
+        <div>
+            <h5>Productos registrados</h5>
+            <p>Lo que edites aquí también se verá en Punto de Venta.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Compra</th>
+                    <th>Precios venta</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.nombre }}</td>
+
+                        <td>
+                            {% if producto.categoria %}
+                                {{ producto.categoria.nombre }}
+                            {% else %}
+                                Sin categoría
+                            {% endif %}
+                        </td>
+
+                        <td>RD$ {{ producto.precio_compra }}</td>
+
+                        <td>
+                            {% for presentacion in producto.presentaciones %}
+                                <span class="badge-ok">
+                                    {{ presentacion.nombre }}: RD$ {{ presentacion.precio }}
+                                </span>
+                                <br>
+                            {% endfor %}
+                        </td>
+
+                        <td>{{ producto.stock }}</td>
+
+                        <td>
+                            {% if producto.stock|int > 0 %}
+                                <span class="badge-ok">Disponible</span>
+                            {% else %}
+                                <span class="badge-danger">Agotado</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="{{ url_for('editar_producto', id=producto.id) }}" class="btn-small">
+                                Editar
+                            </a>
+
+                            <form method="POST" action="{{ url_for('eliminar_producto', id=producto.id) }}" style="display: inline;">
+                                <button type="submit" class="btn-small danger">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">
+                            No hay productos registrados.
+                        </td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

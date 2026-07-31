@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes | Cafetería La Curva{% endblock %}
+{% block page_title %}Reportes{% endblock %}
+
+{% block content %}
+
+<div class="row g-4 mb-4">
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <span>Total vendido</span>
+            <h3>RD$ {{ "%.2f"|format(total_vendido) }}</h3>
+            <small>Según la fecha seleccionada</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <span>Facturas</span>
+            <h3>{{ total_facturas }}</h3>
+            <small>Ventas realizadas</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <span>Productos vendidos</span>
+            <h3>{{ total_productos }}</h3>
+            <small>Cantidad total</small>
+        </div>
+    </div>
+
+</div>
+
+<div class="card-box mb-4">
+
+    <div class="section-header">
+        <div>
+            <h4>Facturas por día</h4>
+            <p>Consulta las ventas realizadas por fecha.</p>
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('reportes') }}" class="form-grid">
+
+        <div>
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha" value="{{ fecha_busqueda }}">
+        </div>
+
+        <a href="{{ url_for('reporte_caja') }}" class="btn-cafe">
+           Reporte de caja
+       </a>
+        <button type="submit" class="btn-cafe form-button">
+            Buscar
+        </button>
+
+        <button type="button" class="btn-small form-button" id="btnImprimirReporte">
+            Imprimir
+        </button>
+
+        <button type="button" class="btn-small form-button" id="btnExportarExcel">
+            Exportar Excel
+        </button>
+
+    </form>
+
+</div>
+
+<div class="card-box">
+
+    <div class="section-header mb-3">
+        <div>
+            <h4>Listado de facturas</h4>
+            <p>Haz clic en una factura para ver los productos vendidos.</p>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+
+        <table class="table align-middle" id="tablaFacturas">
+
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Efectivo</th>
+                    <th>Cambio</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for factura in facturas %}
+
+                    <tr>
+                        <td>#{{ factura.venta.id }}</td>
+                        <td>{{ factura.venta.fecha.strftime("%d/%m/%Y %I:%M %p") }}</td>
+                        <td>RD$ {{ factura.venta.total }}</td>
+                        <td>RD$ {{ factura.venta.efectivo }}</td>
+                        <td>RD$ {{ factura.venta.cambio }}</td>
+                        <td>
+                            <details>
+                                <summary>Ver productos</summary>
+
+                                <table class="table mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Presentación</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio</th>
+                                            <th>Subtotal</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        {% for detalle in factura.detalles %}
+                                            <tr>
+                                                <td>{{ detalle.producto }}</td>
+                                                <td>{{ detalle.presentacion }}</td>
+                                                <td>{{ detalle.cantidad }}</td>
+                                                <td>RD$ {{ detalle.precio }}</td>
+                                                <td>RD$ {{ detalle.subtotal }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+
+                            </details>
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            No hay facturas registradas para esta fecha.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script src="{{ url_for('static', filename='js/reportes.js') }}"></script>
+{% endblock %}

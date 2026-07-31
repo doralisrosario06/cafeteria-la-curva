@@ -1,0 +1,856 @@
+{% extends "base.html" %}
+
+{% block title %}Configuración | Cafetería La Curva{% endblock %}
+{% block page_title %}Configuración{% endblock %}
+
+{% block content %}
+<div class="card p-3 mb-4"><h5>Administración del sistema</h5><div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-primary" href="{{ url_for('respaldo') }}"><i class="bi bi-download"></i> Descargar respaldo</a><a class="btn btn-outline-secondary" href="{{ url_for('auditoria') }}"><i class="bi bi-clock-history"></i> Ver auditoría</a></div><small class="text-muted mt-2">En la nube, los datos se guardan en PostgreSQL. El respaldo manual aplica al modo local SQLite.</small></div>
+
+{# Mensajes que aparecen después de realizar una acción #}
+{% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% if mensajes %}
+        {% for categoria, mensaje in mensajes %}
+            <div class="alert alert-{{ categoria }} config-alert">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>{{ mensaje }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{# Encabezado principal de la configuración #}
+<div class="config-hero mb-4">
+
+    <div class="config-hero-content">
+
+        <div class="config-hero-icon">
+            <i class="bi bi-gear-fill"></i>
+        </div>
+
+        <div>
+            <span class="config-eyebrow">
+                Administración del sistema
+            </span>
+
+            <h2>Usuarios, permisos y seguridad</h2>
+
+            <p>
+                Desde aquí puedo registrar usuarios, asignarles permisos,
+                desactivar cuentas y eliminar usuarios del sistema.
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row g-4 mb-4">
+
+    {# Formulario para registrar un nuevo usuario #}
+    <div class="col-xl-8">
+
+        <div class="card-box config-card h-100">
+
+            <div class="config-card-header">
+
+                <div class="config-card-icon">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+
+                <div>
+                    <h4>Registrar nuevo usuario</h4>
+
+                    <p>
+                        Completo los datos y selecciono los módulos
+                        que podrá utilizar.
+                    </p>
+                </div>
+
+            </div>
+
+            <form
+                method="POST"
+                action="{{ url_for('configuracion') }}"
+                class="config-user-form">
+
+                {# Esta acción indica que se creará un usuario #}
+                <input
+                    type="hidden"
+                    name="accion"
+                    value="crear_usuario">
+
+                {# Nombre completo de la persona #}
+                <div class="config-form-group">
+
+                    <label for="nombre">
+                        <i class="bi bi-person"></i>
+                        Nombre completo
+                    </label>
+
+                    <input
+                        type="text"
+                        id="nombre"
+                        name="nombre"
+                        placeholder="Ejemplo: María Pérez"
+                        autocomplete="name"
+                        required>
+
+                </div>
+
+                {# Usuario que utilizará para iniciar sesión #}
+                <div class="config-form-group">
+
+                    <label for="usuario">
+                        <i class="bi bi-at"></i>
+                        Nombre de usuario
+                    </label>
+
+                    <input
+                        type="text"
+                        id="usuario"
+                        name="usuario"
+                        placeholder="Ejemplo: maria"
+                        autocomplete="username"
+                        required>
+
+                </div>
+
+                {# Contraseña para entrar al sistema #}
+                <div class="config-form-group">
+
+                    <label for="clave">
+                        <i class="bi bi-lock"></i>
+                        Contraseña
+                    </label>
+
+                    <div class="password-field">
+
+                        <input
+                            type="password"
+                            id="clave"
+                            name="clave"
+                            placeholder="Escriba una contraseña segura"
+                            autocomplete="new-password"
+                            required>
+
+                        <button
+                            type="button"
+                            class="password-toggle"
+                            id="mostrarClave"
+                            aria-label="Mostrar u ocultar contraseña"
+                            title="Mostrar u ocultar contraseña">
+
+                            <i
+                                class="bi bi-eye"
+                                aria-hidden="true">
+                            </i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {# Rol principal que tendrá el usuario #}
+                <div class="config-form-group">
+
+                    <label for="rol">
+                        <i class="bi bi-person-badge"></i>
+                        Rol del usuario
+                    </label>
+
+                    <select
+                        id="rol"
+                        name="rol"
+                        required>
+
+                        <option
+                            value=""
+                            selected
+                            disabled>
+                            Seleccione un rol
+                        </option>
+
+                        <option value="Empleado">
+                            Empleado
+                        </option>
+
+                        <option value="Administrador">
+                            Administrador
+                        </option>
+
+                    </select>
+
+                </div>
+
+                {# Aquí selecciono los módulos permitidos #}
+                <div class="config-permissions-section">
+
+                    <div class="permissions-header">
+
+                        <div>
+                            <h5>
+                                <i class="bi bi-shield-check"></i>
+                                Permisos de acceso
+                            </h5>
+
+                            <p>
+                                Marco los módulos que este usuario
+                                podrá ver y utilizar.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="select-all-permissions"
+                            id="seleccionarTodos">
+
+                            Seleccionar todos
+
+                        </button>
+
+                    </div>
+
+                    <div class="permissions-grid">
+
+                        {# Permiso para entrar al panel principal #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_dashboard"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-house-door"></i>
+                            </span>
+
+                            <span>
+                                <strong>Inicio</strong>
+                                <small>Ver el panel principal</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para realizar ventas #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_ventas"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-cart-check"></i>
+                            </span>
+
+                            <span>
+                                <strong>Punto de venta</strong>
+                                <small>Registrar y consultar ventas</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para administrar la caja #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_caja"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-cash-stack"></i>
+                            </span>
+
+                            <span>
+                                <strong>Caja</strong>
+                                <small>Gestionar movimientos de caja</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para manejar ventas fiadas #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_fiados"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-journal-text"></i>
+                            </span>
+
+                            <span>
+                                <strong>Fiados</strong>
+                                <small>Registrar y cobrar deudas</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para controlar los productos #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_inventario"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-box-seam"></i>
+                            </span>
+
+                            <span>
+                                <strong>Inventario</strong>
+                                <small>Gestionar productos y existencias</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para consultar reportes #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_reportes"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                            </span>
+
+                            <span>
+                                <strong>Reportes</strong>
+                                <small>Consultar informes del negocio</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para consultar ganancias #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_ganancias"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </span>
+
+                            <span>
+                                <strong>Ganancias</strong>
+                                <small>Ver ingresos, costos y ganancias</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para entrar a la papelera #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_papelera"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-trash3"></i>
+                            </span>
+
+                            <span>
+                                <strong>Papelera</strong>
+                                <small>Consultar registros eliminados</small>
+                            </span>
+
+                        </label>
+
+                        {# Permiso para administrar el sistema #}
+                        <label class="permission-option">
+
+                            <input
+                                type="checkbox"
+                                name="puede_configuracion"
+                                value="1">
+
+                            <span class="permission-check-icon">
+                                <i class="bi bi-gear"></i>
+                            </span>
+
+                            <span>
+                                <strong>Configuración</strong>
+                                <small>Gestionar usuarios y permisos</small>
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+                {# Botón que guarda el nuevo usuario #}
+                <div class="config-form-actions">
+
+                    <button
+                        type="submit"
+                        class="btn-cafe config-save-btn">
+
+                        <i class="bi bi-person-check-fill"></i>
+                        Guardar usuario
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    {# Información para recordar el uso de cada rol #}
+    <div class="col-xl-4">
+
+        <div class="card-box config-info-card h-100">
+
+            <div class="config-card-header">
+
+                <div class="config-card-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+
+                <div>
+                    <h4>Seguridad de usuarios</h4>
+
+                    <p>
+                        Recomendaciones para administrar correctamente
+                        las cuentas.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="role-info-item">
+
+                <div class="role-info-icon admin">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+
+                <div>
+                    <h5>Administrador</h5>
+
+                    <p>
+                        Puede tener acceso completo, incluyendo
+                        configuración y ganancias.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="role-info-item">
+
+                <div class="role-info-icon employee">
+                    <i class="bi bi-person-workspace"></i>
+                </div>
+
+                <div>
+                    <h5>Empleado</h5>
+
+                    <p>
+                        Solo puede entrar a los módulos que hayan
+                        sido seleccionados.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="config-security-note">
+
+                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                <div>
+                    <strong>Importante</strong>
+
+                    <p>
+                        No elimines tu propia cuenta de administrador.
+                        Puedes desactivar una cuenta temporalmente sin
+                        borrar su información.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{# Tabla con los usuarios registrados #}
+<div class="card-box config-users-card">
+
+    <div class="config-users-header">
+
+        <div class="config-card-header mb-0">
+
+            <div class="config-card-icon">
+                <i class="bi bi-people-fill"></i>
+            </div>
+
+            <div>
+                <h4>Usuarios registrados</h4>
+
+                <p>
+                    Aquí puedo consultar, activar, desactivar
+                    o eliminar cuentas.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="config-user-count">
+            <i class="bi bi-people"></i>
+
+            <span>
+                {{ usuarios|length }}
+                usuario{% if usuarios|length != 1 %}s{% endif %}
+            </span>
+        </div>
+
+    </div>
+
+    <div class="table-responsive config-table-wrapper">
+
+        <table class="table align-middle config-users-table">
+
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Cuenta</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Permisos</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for user in usuarios %}
+
+                    <tr>
+
+                        <td>
+
+                            <div class="config-user-profile">
+
+                                <div class="config-user-avatar">
+                                    {{ user.nombre[0]|upper }}
+                                </div>
+
+                                <div>
+                                    <strong>{{ user.nombre }}</strong>
+                                    <small>Usuario del sistema</small>
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            <span class="config-username">
+                                <i class="bi bi-at"></i>
+                                {{ user.usuario }}
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            {% if user.rol == "Administrador" %}
+
+                                <span class="role-badge admin">
+                                    <i class="bi bi-shield-fill-check"></i>
+                                    Administrador
+                                </span>
+
+                            {% else %}
+
+                                <span class="role-badge employee">
+                                    <i class="bi bi-person-fill"></i>
+                                    Empleado
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if user.activo %}
+
+                                <span class="status-badge active">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Activo
+                                </span>
+
+                            {% else %}
+
+                                <span class="status-badge inactive">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    Inactivo
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <div class="permissions-list">
+
+                                {% if user.puede_dashboard %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-house-door"></i>
+                                        Inicio
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_ventas %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-cart-check"></i>
+                                        Ventas
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_caja %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-cash-stack"></i>
+                                        Caja
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_fiados %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-journal-text"></i>
+                                        Fiados
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_inventario %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-box-seam"></i>
+                                        Inventario
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_reportes %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-file-earmark-bar-graph"></i>
+                                        Reportes
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_ganancias %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-graph-up-arrow"></i>
+                                        Ganancias
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_papelera %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-trash3"></i>
+                                        Papelera
+                                    </span>
+                                {% endif %}
+
+                                {% if user.puede_configuracion %}
+                                    <span class="permission-badge">
+                                        <i class="bi bi-gear"></i>
+                                        Configuración
+                                    </span>
+                                {% endif %}
+
+                            </div>
+
+                        </td>
+
+                        <td>
+
+                            <div class="config-user-actions">
+
+                                {# Botón para activar o desactivar la cuenta #}
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('configuracion') }}">
+
+                                    <input
+                                        type="hidden"
+                                        name="accion"
+                                        value="cambiar_estado">
+
+                                    <input
+                                        type="hidden"
+                                        name="usuario_id"
+                                        value="{{ user.id }}">
+
+                                    {% if user.activo %}
+
+                                        <button
+                                            type="submit"
+                                            class="config-action-btn disable"
+                                            title="Desactivar usuario">
+
+                                            <i class="bi bi-person-slash"></i>
+                                            Desactivar
+
+                                        </button>
+
+                                    {% else %}
+
+                                        <button
+                                            type="submit"
+                                            class="config-action-btn enable"
+                                            title="Activar usuario">
+
+                                            <i class="bi bi-person-check"></i>
+                                            Activar
+
+                                        </button>
+
+                                    {% endif %}
+
+                                </form>
+
+                                {# Botón para eliminar la cuenta definitivamente #}
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('configuracion') }}"
+                                    onsubmit="return confirmarEliminacion('{{ user.nombre }}');">
+
+                                    <input
+                                        type="hidden"
+                                        name="accion"
+                                        value="eliminar_usuario">
+
+                                    <input
+                                        type="hidden"
+                                        name="usuario_id"
+                                        value="{{ user.id }}">
+
+                                    <button
+                                        type="submit"
+                                        class="config-action-btn delete"
+                                        title="Eliminar usuario">
+
+                                        <i class="bi bi-trash3"></i>
+                                        Eliminar
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="text-center text-muted py-5">
+
+                            <div class="config-empty-state">
+
+                                <i class="bi bi-person-x"></i>
+
+                                <strong>
+                                    No hay usuarios registrados
+                                </strong>
+
+                                <span>
+                                    Cuando agregues una cuenta aparecerá aquí.
+                                </span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block js %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const botonClave = document.getElementById("mostrarClave");
+    const campoClave = document.getElementById("clave");
+    const botonSeleccionar = document.getElementById("seleccionarTodos");
+
+    /* Muestro u oculto la contraseña */
+    if (botonClave && campoClave) {
+        botonClave.addEventListener("click", function () {
+            const estaVisible = campoClave.type === "text";
+
+            campoClave.type = estaVisible
+                ? "password"
+                : "text";
+
+            botonClave.innerHTML = estaVisible
+                ? '<i class="bi bi-eye"></i>'
+                : '<i class="bi bi-eye-slash"></i>';
+        });
+    }
+
+    /* Selecciono o desmarco todos los permisos */
+    if (botonSeleccionar) {
+        botonSeleccionar.addEventListener("click", function () {
+            const permisos = document.querySelectorAll(
+                '.permission-option input[type="checkbox"]'
+            );
+
+            const todosMarcados = Array.from(permisos).every(
+                function (permiso) {
+                    return permiso.checked;
+                }
+            );
+
+            permisos.forEach(function (permiso) {
+                permiso.checked = !todosMarcados;
+            });
+
+            botonSeleccionar.textContent = todosMarcados
+                ? "Seleccionar todos"
+                : "Quitar selección";
+        });
+    }
+});
+
+/* Confirmo antes de eliminar una cuenta */
+function confirmarEliminacion(nombreUsuario) {
+    return window.confirm(
+        "¿Seguro que deseas eliminar al usuario " +
+        nombreUsuario +
+        "? Esta acción no se puede deshacer."
+    );
+}
+</script>
+
+{% endblock %}

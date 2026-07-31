@@ -1,0 +1,1416 @@
+{% extends "base.html" %}
+
+{% block title %}Caja | Cafetería La Curva{% endblock %}
+{% block page_title %}Caja{% endblock %}
+
+{% block content %}
+
+<!-- ======================================================
+     MENSAJES DEL SISTEMA
+====================================================== -->
+{% with mensajes = get_flashed_messages() %}
+    {% if mensajes %}
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            {{ mensajes[0] }}
+
+            <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Cerrar">
+            </button>
+        </div>
+    {% endif %}
+{% endwith %}
+
+
+<!-- ======================================================
+     RESUMEN DE CAJA
+====================================================== -->
+<div class="row g-4 mb-4">
+
+    <!-- Caja actual -->
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="stat-card caja-stat-card h-100">
+
+            <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                    <span class="stat-label">Caja actual</span>
+
+                    <h3>
+                        RD$ {{ "%.2f"|format(caja_actual|default(0, true)) }}
+                    </h3>
+
+                    {% if caja_abierta %}
+                        <small class="caja-estado caja-estado-abierta">
+                            <i class="bi bi-unlock-fill"></i>
+                            Caja abierta
+                        </small>
+                    {% else %}
+                        <small class="caja-estado caja-estado-cerrada">
+                            <i class="bi bi-lock-fill"></i>
+                            Caja cerrada
+                        </small>
+                    {% endif %}
+                </div>
+
+                <div class="caja-stat-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Ventas del día -->
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="stat-card caja-stat-card h-100">
+
+            <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                    <span class="stat-label">Ventas del día</span>
+
+                    <h3>
+                        RD$ {{ "%.2f"|format(ventas_dia|default(0, true)) }}
+                    </h3>
+
+                    <small>Ventas registradas durante el día</small>
+                </div>
+
+                <div class="caja-stat-icon">
+                    <i class="bi bi-cart-check"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Salidas -->
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="stat-card caja-stat-card h-100">
+
+            <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                    <span class="stat-label">Salidas del día</span>
+
+                    <h3>
+                        RD$ {{ "%.2f"|format(total_salidas|default(0, true)) }}
+                    </h3>
+
+                    <small>Gastos y retiros registrados</small>
+                </div>
+
+                <div class="caja-stat-icon">
+                    <i class="bi bi-box-arrow-right"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     ACCIONES PRINCIPALES
+====================================================== -->
+<div class="card-box mb-4">
+
+    <div class="section-header mb-4">
+        <div>
+            <h4 class="mb-1">Administración de caja</h4>
+            <p class="mb-0">
+                Selecciona la acción que deseas realizar.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Abrir caja -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <button
+                type="button"
+                class="caja-action-card"
+                data-bs-toggle="modal"
+                data-bs-target="#modalAbrirCaja"
+                {% if caja_abierta %}disabled{% endif %}>
+
+                <span class="caja-action-icon">
+                    <i class="bi bi-unlock"></i>
+                </span>
+
+                <span class="caja-action-title">Abrir caja</span>
+
+                <span class="caja-action-description">
+                    Registra el monto inicial del día.
+                </span>
+            </button>
+        </div>
+
+
+        <!-- Cerrar caja -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <button
+                type="button"
+                class="caja-action-card caja-action-danger"
+                data-bs-toggle="modal"
+                data-bs-target="#modalCerrarCaja"
+                {% if not caja_abierta %}disabled{% endif %}>
+
+                <span class="caja-action-icon">
+                    <i class="bi bi-lock"></i>
+                </span>
+
+                <span class="caja-action-title">Cerrar caja</span>
+
+                <span class="caja-action-description">
+                    Registra el dinero contado al final.
+                </span>
+            </button>
+        </div>
+
+
+        <!-- Nuevo movimiento -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <button
+                type="button"
+                class="caja-action-card"
+                data-bs-toggle="modal"
+                data-bs-target="#modalMovimiento"
+                {% if not caja_abierta %}disabled{% endif %}>
+
+                <span class="caja-action-icon">
+                    <i class="bi bi-plus-lg"></i>
+                </span>
+
+                <span class="caja-action-title">Nuevo movimiento</span>
+
+                <span class="caja-action-description">
+                    Registra entradas, gastos o retiros.
+                </span>
+            </button>
+        </div>
+
+
+        <!-- Consultar movimientos -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <button
+                type="button"
+                class="caja-action-card"
+                data-bs-toggle="modal"
+                data-bs-target="#modalMovimientos">
+
+                <span class="caja-action-icon">
+                    <i class="bi bi-clock-history"></i>
+                </span>
+
+                <span class="caja-action-title">Ver movimientos</span>
+
+                <span class="caja-action-description">
+                    Busca y filtra el historial del día.
+                </span>
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     VISTA RÁPIDA DE MOVIMIENTOS
+====================================================== -->
+<div class="card-box">
+
+    <div class="section-header mb-4">
+        <div>
+            <h4 class="mb-1">Últimos movimientos</h4>
+            <p class="mb-0">
+                Vista rápida de las operaciones registradas hoy.
+            </p>
+        </div>
+
+        <button
+            type="button"
+            class="btn-cafe btn-caja-small"
+            data-bs-toggle="modal"
+            data-bs-target="#modalMovimientos">
+
+            <i class="bi bi-search me-2"></i>
+            Consultar todos
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle caja-table">
+            <thead>
+                <tr>
+                    <th>Hora</th>
+                    <th>Concepto</th>
+                    <th>Descripción</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Monto</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for movimiento in movimientos[:5] %}
+                    <tr>
+                        <td>
+                            {{ movimiento.fecha.strftime("%I:%M %p") }}
+                        </td>
+
+                        <td>
+                            <strong>{{ movimiento.concepto }}</strong>
+                        </td>
+
+                        <td>
+                            {{ movimiento.descripcion or "Sin descripción" }}
+                        </td>
+
+                        <td>
+                            {% if movimiento.tipo == "Entrada" %}
+                                <span class="badge-ok">
+                                    <i class="bi bi-arrow-down-left-circle me-1"></i>
+                                    Entrada
+                                </span>
+                            {% else %}
+                                <span class="badge-danger">
+                                    <i class="bi bi-arrow-up-right-circle me-1"></i>
+                                    Salida
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end fw-bold">
+                            RD$ {{ "%.2f"|format(movimiento.monto) }}
+                        </td>
+                    </tr>
+
+                {% else %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="caja-empty-state">
+                                <i class="bi bi-inbox"></i>
+
+                                <strong>No hay movimientos registrados</strong>
+
+                                <span>
+                                    Los movimientos del día aparecerán aquí.
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+
+<!-- ======================================================
+     MODAL: ABRIR CAJA
+====================================================== -->
+<div
+    class="modal fade"
+    id="modalAbrirCaja"
+    tabindex="-1"
+    aria-labelledby="tituloAbrirCaja"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content caja-modal">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="tituloAbrirCaja">
+                        <i class="bi bi-unlock me-2"></i>
+                        Apertura de caja
+                    </h5>
+
+                    <p class="modal-subtitle">
+                        Registra el monto con el que iniciarás el día.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('caja') }}">
+                <div class="modal-body">
+
+                    <input type="hidden" name="accion" value="abrir">
+
+                    <div class="mb-3">
+                        <label for="monto_inicial" class="form-label">
+                            Monto inicial
+                        </label>
+
+                        <div class="input-group caja-input-group">
+                            <span class="input-group-text">RD$</span>
+
+                            <input
+                                type="number"
+                                id="monto_inicial"
+                                name="monto_inicial"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                placeholder="Ej.: 5000.00"
+                                required>
+                        </div>
+
+                        <small class="form-text">
+                            Escribe el efectivo disponible antes de comenzar.
+                        </small>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn-cafe">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Abrir caja
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================
+     MODAL: CERRAR CAJA
+====================================================== -->
+<div
+    class="modal fade"
+    id="modalCerrarCaja"
+    tabindex="-1"
+    aria-labelledby="tituloCerrarCaja"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content caja-modal">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="tituloCerrarCaja">
+                        <i class="bi bi-lock me-2"></i>
+                        Cierre de caja
+                    </h5>
+
+                    <p class="modal-subtitle">
+                        Registra el dinero contado físicamente.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <form
+                method="POST"
+                action="{{ url_for('caja') }}"
+                id="formCerrarCaja">
+
+                <div class="modal-body">
+
+                    <input type="hidden" name="accion" value="cerrar">
+
+                    <div class="caja-close-summary mb-4">
+                        <div>
+                            <span>Total esperado</span>
+
+                            <strong>
+                                RD$ {{ "%.2f"|format(caja_actual|default(0, true)) }}
+                            </strong>
+                        </div>
+
+                        <i class="bi bi-calculator"></i>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="monto_final" class="form-label">
+                            Dinero contado
+                        </label>
+
+                        <div class="input-group caja-input-group">
+                            <span class="input-group-text">RD$</span>
+
+                            <input
+                                type="number"
+                                id="monto_final"
+                                name="monto_final"
+                                class="form-control"
+                                min="0"
+                                step="0.01"
+                                placeholder="Ej.: 8500.00"
+                                required>
+                        </div>
+                    </div>
+
+                    <div
+                        class="caja-difference-box d-none"
+                        id="resultadoDiferencia">
+
+                        <span>Diferencia</span>
+
+                        <strong id="textoDiferencia">
+                            RD$ 0.00
+                        </strong>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn-danger-custom">
+                        <i class="bi bi-lock-fill me-2"></i>
+                        Cerrar caja
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================
+     MODAL: REGISTRAR MOVIMIENTO
+====================================================== -->
+<div
+    class="modal fade"
+    id="modalMovimiento"
+    tabindex="-1"
+    aria-labelledby="tituloMovimiento"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content caja-modal">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="tituloMovimiento">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Registrar movimiento
+                    </h5>
+
+                    <p class="modal-subtitle">
+                        Registra una entrada o salida manual de dinero.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('caja') }}">
+                <div class="modal-body">
+
+                    <input type="hidden" name="accion" value="movimiento">
+
+                    <div class="row g-3">
+
+                        <div class="col-12 col-md-6">
+                            <label for="tipo" class="form-label">
+                                Tipo de movimiento
+                            </label>
+
+                            <select
+                                id="tipo"
+                                name="tipo"
+                                class="form-select"
+                                required>
+
+                                <option value="Entrada">Entrada</option>
+                                <option value="Salida">Salida</option>
+                            </select>
+                        </div>
+
+
+                        <div class="col-12 col-md-6">
+                            <label for="concepto" class="form-label">
+                                Concepto
+                            </label>
+
+                            <select
+                                id="concepto"
+                                name="concepto"
+                                class="form-select"
+                                required>
+
+                                <option value="">Selecciona un concepto</option>
+                                <option value="Ventas en efectivo">
+                                    Ventas en efectivo
+                                </option>
+                                <option value="Compra de insumos">
+                                    Compra de insumos
+                                </option>
+                                <option value="Pago de servicio">
+                                    Pago de servicio
+                                </option>
+                                <option value="Transporte">
+                                    Transporte
+                                </option>
+                                <option value="Limpieza">
+                                    Limpieza
+                                </option>
+                                <option value="Retiro de dinero">
+                                    Retiro de dinero
+                                </option>
+                                <option value="Ingreso adicional">
+                                    Ingreso adicional
+                                </option>
+                                <option value="Otro">
+                                    Otro
+                                </option>
+                            </select>
+                        </div>
+
+
+                        <div class="col-12">
+                            <label for="monto" class="form-label">
+                                Monto
+                            </label>
+
+                            <div class="input-group caja-input-group">
+                                <span class="input-group-text">RD$</span>
+
+                                <input
+                                    type="number"
+                                    id="monto"
+                                    name="monto"
+                                    class="form-control"
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    required>
+                            </div>
+                        </div>
+
+
+                        <div class="col-12">
+                            <label for="descripcion" class="form-label">
+                                Descripción
+                            </label>
+
+                            <textarea
+                                id="descripcion"
+                                name="descripcion"
+                                class="form-control"
+                                rows="3"
+                                maxlength="250"
+                                placeholder="Ej.: Compra de azúcar, leche y vasos."></textarea>
+
+                            <div class="text-end mt-1">
+                                <small class="text-muted">
+                                    <span id="contadorDescripcion">0</span>/250
+                                </small>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn-cafe">
+                        <i class="bi bi-save me-2"></i>
+                        Guardar movimiento
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================
+     MODAL: HISTORIAL DE MOVIMIENTOS
+====================================================== -->
+<div
+    class="modal fade"
+    id="modalMovimientos"
+    tabindex="-1"
+    aria-labelledby="tituloMovimientos"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content caja-modal caja-modal-history">
+
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="tituloMovimientos">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Movimientos del día
+                    </h5>
+
+                    <p class="modal-subtitle">
+                        Busca y filtra las entradas y salidas registradas.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Herramientas de búsqueda -->
+                <div class="row g-3 align-items-end mb-4">
+
+                    <div class="col-12 col-lg-7">
+                        <label for="buscarMovimiento" class="form-label">
+                            Buscar movimiento
+                        </label>
+
+                        <div class="position-relative">
+                            <i class="bi bi-search caja-search-icon"></i>
+
+                            <input
+                                type="search"
+                                id="buscarMovimiento"
+                                class="form-control caja-search-input"
+                                placeholder="Buscar por concepto, descripción, hora o monto...">
+                        </div>
+                    </div>
+
+
+                    <div class="col-12 col-sm-8 col-lg-3">
+                        <label for="filtroTipo" class="form-label">
+                            Filtrar por tipo
+                        </label>
+
+                        <select id="filtroTipo" class="form-select">
+                            <option value="todos">Todos</option>
+                            <option value="entrada">Entradas</option>
+                            <option value="salida">Salidas</option>
+                        </select>
+                    </div>
+
+
+                    <div class="col-12 col-sm-4 col-lg-2">
+                        <button
+                            type="button"
+                            id="limpiarFiltros"
+                            class="btn btn-light w-100">
+
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>
+                            Limpiar
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <!-- Cantidad de resultados -->
+                <div class="caja-results-info mb-3">
+                    <span>
+                        Resultados encontrados:
+                        <strong id="cantidadResultados">
+                            {{ movimientos|length }}
+                        </strong>
+                    </span>
+                </div>
+
+
+                <!-- Tabla -->
+                <div class="table-responsive caja-history-table-wrapper">
+                    <table class="table align-middle caja-table" id="tablaMovimientos">
+
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Concepto</th>
+                                <th>Descripción</th>
+                                <th>Tipo</th>
+                                <th class="text-end">Monto</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for movimiento in movimientos %}
+                                <tr
+                                    class="movimiento-row"
+                                    data-tipo="{{ movimiento.tipo|lower }}">
+
+                                    <td class="movimiento-hora">
+                                        {{ movimiento.fecha.strftime("%I:%M %p") }}
+                                    </td>
+
+                                    <td class="movimiento-concepto">
+                                        <strong>
+                                            {{ movimiento.concepto }}
+                                        </strong>
+                                    </td>
+
+                                    <td class="movimiento-descripcion">
+                                        {{ movimiento.descripcion or "Sin descripción" }}
+                                    </td>
+
+                                    <td class="movimiento-tipo">
+                                        {% if movimiento.tipo == "Entrada" %}
+                                            <span class="badge-ok">
+                                                <i class="bi bi-arrow-down-left-circle me-1"></i>
+                                                Entrada
+                                            </span>
+                                        {% else %}
+                                            <span class="badge-danger">
+                                                <i class="bi bi-arrow-up-right-circle me-1"></i>
+                                                Salida
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="movimiento-monto text-end fw-bold">
+                                        RD$ {{ "%.2f"|format(movimiento.monto) }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+
+                <!-- Estado sin resultados -->
+                <div
+                    id="sinResultados"
+                    class="caja-empty-state d-none">
+
+                    <i class="bi bi-search"></i>
+
+                    <strong>No encontramos movimientos</strong>
+
+                    <span>
+                        Prueba con otra palabra o cambia el filtro.
+                    </span>
+                </div>
+
+
+                {% if not movimientos %}
+                    <div class="caja-empty-state" id="sinMovimientosIniciales">
+                        <i class="bi bi-inbox"></i>
+
+                        <strong>No hay movimientos registrados</strong>
+
+                        <span>
+                            Registra una entrada o salida para comenzar.
+                        </span>
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-light"
+                    data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================
+     ESTILOS DEL MÓDULO DE CAJA
+====================================================== -->
+<style>
+    .caja-stat-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 170px;
+    }
+
+    .caja-stat-card::after {
+        content: "";
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        top: -35px;
+        right: -35px;
+        border-radius: 50%;
+        background: rgba(197, 131, 72, 0.09);
+    }
+
+    .stat-label {
+        display: block;
+        margin-bottom: 12px;
+        color: #7c685b;
+        font-weight: 500;
+    }
+
+    .caja-stat-card h3 {
+        margin-bottom: 10px;
+        font-size: clamp(1.8rem, 3vw, 2.35rem);
+        font-weight: 800;
+    }
+
+    .caja-stat-icon {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        flex: 0 0 58px;
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        background: #fbf1e7;
+        color: #a65f27;
+        font-size: 1.55rem;
+    }
+
+    .caja-estado {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+    }
+
+    .caja-estado-abierta {
+        background: #e8f6ec;
+        color: #267a3d;
+    }
+
+    .caja-estado-cerrada {
+        background: #f7e9e7;
+        color: #aa3f38;
+    }
+
+    .caja-action-card {
+        width: 100%;
+        min-height: 205px;
+        padding: 24px;
+        border: 1px solid #eadfd6;
+        border-radius: 20px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        transition: transform 0.2s ease, box-shadow 0.2s ease,
+                    border-color 0.2s ease;
+    }
+
+    .caja-action-card:hover:not(:disabled) {
+        transform: translateY(-4px);
+        border-color: #c98548;
+        box-shadow: 0 14px 30px rgba(83, 54, 35, 0.11);
+    }
+
+    .caja-action-card:disabled {
+        opacity: 0.48;
+        cursor: not-allowed;
+        background: #f7f4f1;
+    }
+
+    .caja-action-icon {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        margin-bottom: 18px;
+        border-radius: 18px;
+        background: #fbefe3;
+        color: #a65f27;
+        font-size: 1.55rem;
+    }
+
+    .caja-action-danger .caja-action-icon {
+        background: #fae8e7;
+        color: #b63b36;
+    }
+
+    .caja-action-title {
+        margin-bottom: 7px;
+        color: #25160f;
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+
+    .caja-action-description {
+        color: #7a6d65;
+        line-height: 1.5;
+    }
+
+    .btn-caja-small {
+        width: auto;
+        padding: 10px 17px;
+    }
+
+    .caja-modal {
+        border: 0;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 24px 70px rgba(34, 19, 11, 0.25);
+    }
+
+    .caja-modal .modal-header {
+        align-items: flex-start;
+        padding: 22px 24px 18px;
+        border-bottom: 1px solid #eee4dc;
+    }
+
+    .caja-modal .modal-body {
+        padding: 24px;
+    }
+
+    .caja-modal .modal-footer {
+        padding: 16px 24px 22px;
+        border-top: 1px solid #eee4dc;
+    }
+
+    .modal-subtitle {
+        margin: 4px 0 0;
+        color: #7a6b62;
+        font-size: 0.92rem;
+    }
+
+    .caja-input-group .input-group-text {
+        border-color: #e2d7ce;
+        background: #f8f3ef;
+        color: #6c584b;
+    }
+
+    .caja-input-group .form-control {
+        border-color: #e2d7ce;
+    }
+
+    .caja-close-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px;
+        border-radius: 16px;
+        background: #fbf3eb;
+    }
+
+    .caja-close-summary span {
+        display: block;
+        color: #7a6a60;
+        font-size: 0.9rem;
+    }
+
+    .caja-close-summary strong {
+        display: block;
+        margin-top: 4px;
+        font-size: 1.45rem;
+    }
+
+    .caja-close-summary i {
+        color: #a65f27;
+        font-size: 2rem;
+    }
+
+    .caja-difference-box {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #f5f1ed;
+    }
+
+    .caja-difference-positive {
+        background: #e8f6ec;
+        color: #23733a;
+    }
+
+    .caja-difference-negative {
+        background: #fae8e7;
+        color: #a8322e;
+    }
+
+    .caja-search-icon {
+        position: absolute;
+        top: 50%;
+        left: 15px;
+        transform: translateY(-50%);
+        color: #8c7c72;
+        pointer-events: none;
+    }
+
+    .caja-search-input {
+        padding-left: 43px;
+    }
+
+    .caja-results-info {
+        color: #75655c;
+        font-size: 0.92rem;
+    }
+
+    .caja-history-table-wrapper {
+        max-height: 460px;
+        overflow-y: auto;
+        border: 1px solid #eee4dc;
+        border-radius: 16px;
+    }
+
+    .caja-history-table-wrapper thead {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fbf8f5;
+    }
+
+    .caja-table {
+        margin-bottom: 0;
+    }
+
+    .caja-table th {
+        white-space: nowrap;
+        color: #59463a;
+        font-size: 0.87rem;
+    }
+
+    .caja-table td {
+        vertical-align: middle;
+    }
+
+    .caja-empty-state {
+        min-height: 220px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 30px;
+        text-align: center;
+        color: #7c6d63;
+    }
+
+    .caja-empty-state i {
+        margin-bottom: 12px;
+        color: #b2733f;
+        font-size: 2.5rem;
+    }
+
+    .caja-empty-state strong {
+        margin-bottom: 5px;
+        color: #38251a;
+        font-size: 1rem;
+    }
+
+    .caja-empty-state span {
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 767px) {
+        .section-header {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .btn-caja-small {
+            width: 100%;
+        }
+
+        .caja-action-card {
+            min-height: 175px;
+        }
+
+        .caja-modal .modal-header,
+        .caja-modal .modal-body,
+        .caja-modal .modal-footer {
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+
+        .caja-table {
+            min-width: 800px;
+        }
+    }
+</style>
+
+
+<!-- ======================================================
+     JAVASCRIPT DEL MÓDULO
+====================================================== -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* --------------------------------------------------
+       BUSCADOR Y FILTRO DE MOVIMIENTOS
+    -------------------------------------------------- */
+    const buscarMovimiento = document.getElementById("buscarMovimiento");
+    const filtroTipo = document.getElementById("filtroTipo");
+    const limpiarFiltros = document.getElementById("limpiarFiltros");
+    const filas = document.querySelectorAll(".movimiento-row");
+    const cantidadResultados = document.getElementById("cantidadResultados");
+    const sinResultados = document.getElementById("sinResultados");
+    const tablaMovimientos = document.getElementById("tablaMovimientos");
+
+    function normalizarTexto(texto) {
+        return texto
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function filtrarMovimientos() {
+        const textoBusqueda = normalizarTexto(
+            buscarMovimiento ? buscarMovimiento.value.trim() : ""
+        );
+
+        const tipoSeleccionado = filtroTipo
+            ? filtroTipo.value
+            : "todos";
+
+        let visibles = 0;
+
+        filas.forEach(function (fila) {
+            const textoFila = normalizarTexto(fila.textContent);
+            const tipoFila = fila.dataset.tipo || "";
+
+            const coincideTexto =
+                textoBusqueda === "" ||
+                textoFila.includes(textoBusqueda);
+
+            const coincideTipo =
+                tipoSeleccionado === "todos" ||
+                tipoFila === tipoSeleccionado;
+
+            const mostrar = coincideTexto && coincideTipo;
+
+            fila.style.display = mostrar ? "" : "none";
+
+            if (mostrar) {
+                visibles++;
+            }
+        });
+
+        if (cantidadResultados) {
+            cantidadResultados.textContent = visibles;
+        }
+
+        if (sinResultados) {
+            sinResultados.classList.toggle("d-none", visibles !== 0);
+        }
+
+        if (tablaMovimientos) {
+            tablaMovimientos.classList.toggle(
+                "d-none",
+                visibles === 0
+            );
+        }
+    }
+
+    if (buscarMovimiento) {
+        buscarMovimiento.addEventListener(
+            "input",
+            filtrarMovimientos
+        );
+    }
+
+    if (filtroTipo) {
+        filtroTipo.addEventListener(
+            "change",
+            filtrarMovimientos
+        );
+    }
+
+    if (limpiarFiltros) {
+        limpiarFiltros.addEventListener("click", function () {
+            buscarMovimiento.value = "";
+            filtroTipo.value = "todos";
+            filtrarMovimientos();
+            buscarMovimiento.focus();
+        });
+    }
+
+
+    /* --------------------------------------------------
+       CONTADOR DE DESCRIPCIÓN
+    -------------------------------------------------- */
+    const descripcion = document.getElementById("descripcion");
+    const contadorDescripcion = document.getElementById(
+        "contadorDescripcion"
+    );
+
+    if (descripcion && contadorDescripcion) {
+        descripcion.addEventListener("input", function () {
+            contadorDescripcion.textContent =
+                descripcion.value.length;
+        });
+    }
+
+
+    /* --------------------------------------------------
+       CALCULAR DIFERENCIA AL CERRAR LA CAJA
+    -------------------------------------------------- */
+    const montoFinal = document.getElementById("monto_final");
+    const resultadoDiferencia = document.getElementById(
+        "resultadoDiferencia"
+    );
+    const textoDiferencia = document.getElementById(
+        "textoDiferencia"
+    );
+
+    const cajaEsperada = Number(
+        "{{ caja_actual|default(0, true) }}"
+    );
+
+    if (
+        montoFinal &&
+        resultadoDiferencia &&
+        textoDiferencia
+    ) {
+        montoFinal.addEventListener("input", function () {
+            const contado = Number(montoFinal.value);
+
+            if (montoFinal.value === "") {
+                resultadoDiferencia.classList.add("d-none");
+                return;
+            }
+
+            const diferencia = contado - cajaEsperada;
+
+            resultadoDiferencia.classList.remove(
+                "d-none",
+                "caja-difference-positive",
+                "caja-difference-negative"
+            );
+
+            textoDiferencia.textContent =
+                "RD$ " + diferencia.toFixed(2);
+
+            if (diferencia >= 0) {
+                resultadoDiferencia.classList.add(
+                    "caja-difference-positive"
+                );
+            } else {
+                resultadoDiferencia.classList.add(
+                    "caja-difference-negative"
+                );
+            }
+        });
+    }
+
+
+    /* --------------------------------------------------
+       CONFIRMACIÓN DE CIERRE DE CAJA
+    -------------------------------------------------- */
+    const formCerrarCaja = document.getElementById(
+        "formCerrarCaja"
+    );
+
+    if (formCerrarCaja) {
+        formCerrarCaja.addEventListener("submit", function (event) {
+            const confirmado = window.confirm(
+                "¿Estás segura de que deseas cerrar la caja? " +
+                "Luego tendrás que abrir una nueva caja para registrar movimientos."
+            );
+
+            if (!confirmado) {
+                event.preventDefault();
+            }
+        });
+    }
+
+
+    /* --------------------------------------------------
+       CAMBIAR CONCEPTOS SEGÚN EL TIPO
+    -------------------------------------------------- */
+    const tipoMovimiento = document.getElementById("tipo");
+    const conceptoMovimiento = document.getElementById("concepto");
+
+    const conceptosEntrada = [
+        "Ventas en efectivo",
+        "Ingreso adicional",
+        "Devolución recibida",
+        "Otro"
+    ];
+
+    const conceptosSalida = [
+        "Compra de insumos",
+        "Pago de servicio",
+        "Transporte",
+        "Limpieza",
+        "Retiro de dinero",
+        "Otro"
+    ];
+
+    function actualizarConceptos() {
+        if (!tipoMovimiento || !conceptoMovimiento) {
+            return;
+        }
+
+        const lista = tipoMovimiento.value === "Entrada"
+            ? conceptosEntrada
+            : conceptosSalida;
+
+        conceptoMovimiento.innerHTML =
+            '<option value="">Selecciona un concepto</option>';
+
+        lista.forEach(function (concepto) {
+            const opcion = document.createElement("option");
+            opcion.value = concepto;
+            opcion.textContent = concepto;
+            conceptoMovimiento.appendChild(opcion);
+        });
+    }
+
+    if (tipoMovimiento && conceptoMovimiento) {
+        tipoMovimiento.addEventListener(
+            "change",
+            actualizarConceptos
+        );
+
+        actualizarConceptos();
+    }
+
+});
+</script>
+
+{% endblock %}
